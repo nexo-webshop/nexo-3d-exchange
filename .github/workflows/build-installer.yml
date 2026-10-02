@@ -34,7 +34,7 @@ jobs:
       - name: Build N3X executable
         shell: pwsh
         run: |
-          pyinstaller --noconfirm --clean --onefile --name n3x src/n3x/__main__.py
+          pyinstaller --noconfirm --clean --onefile --console --name n3x --paths src build.py
 
       - name: Verify executable
         shell: pwsh
@@ -53,6 +53,14 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path "dist" | Out-Null
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\N3X.iss"
+
+      - name: Verify installer
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem "dist\Nexo-3D-Exchange-Setup-*.exe"
+          if (-not $installer) {
+            throw "Installer was not created."
+          }
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
