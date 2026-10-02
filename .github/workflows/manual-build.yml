@@ -1,0 +1,51 @@
+name: N3X Manual Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install pyinstaller pytest
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Build executable
+        run: pyinstaller --noconfirm --clean --onefile --name n3x src/n3x/cli.py
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: powershell
+        run: iscc installer\n3x-installer.iss
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: n3x-windows-exe
+          path: dist\n3x.exe
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: n3x-windows-installer
+          path: dist-installer\*.exe
